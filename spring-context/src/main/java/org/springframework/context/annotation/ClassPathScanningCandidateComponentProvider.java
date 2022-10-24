@@ -309,10 +309,13 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 * @return a corresponding Set of autodetected bean definitions
 	 */
 	public Set<BeanDefinition> findCandidateComponents(String basePackage) {
+		//类很多的情况，包扫描会很慢，这里可以通过一个文件来定义哪些是需要加载的
+		//需要在META_INF下定义文件spring.components文件，左边为类的路径名,等号右边为对应的注解的类型
 		if (this.componentsIndex != null && indexSupportsIncludeFilters()) {
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		}
 		else {
+			//大部分情况走这里
 			return scanCandidateComponents(basePackage);
 		}
 	}
@@ -373,6 +376,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	private Set<BeanDefinition> addCandidateComponentsFromIndex(CandidateComponentsIndex index, String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
+			//通过index索引文件，获取类名Types，通过类名获取MetadataReader
 			Set<String> types = new HashSet<>();
 			for (TypeFilter filter : this.includeFilters) {
 				String stereotype = extractStereotype(filter);
@@ -384,6 +388,8 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
 			for (String type : types) {
+
+				//通过类路径名来获取MetadataReader
 				MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(type);
 				if (isCandidateComponent(metadataReader)) {
 					ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
@@ -392,6 +398,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 						if (debugEnabled) {
 							logger.debug("Using candidate component class from index: " + type);
 						}
+						//满足条件的class文件，BeanDefinition信息会加载到candidates中
 						candidates.add(sbd);
 					}
 					else {
@@ -416,6 +423,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	private Set<BeanDefinition> scanCandidateComponents(String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
+			//获取包路下的class文件
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
@@ -426,10 +434,15 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 					logger.trace("Scanning " + resource);
 				}
 				try {
+					//根据resource获取metadata原数据信息
 					MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
+
+					//走过滤器，符合filter match()的继续往下执行
 					if (isCandidateComponent(metadataReader)) {
 						ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 						sbd.setSource(resource);
+
+						//是否是抽象类、接口等的判断
 						if (isCandidateComponent(sbd)) {
 							if (debugEnabled) {
 								logger.debug("Identified candidate component class: " + resource);
@@ -485,13 +498,16 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 * @return whether the class qualifies as a candidate component
 	 */
 	protected boolean isCandidateComponent(MetadataReader metadataReader) throws IOException {
+		//排除过滤器，可以自定义TypeFilter，实现match方法，指定符合规则的class文件不注册
 		for (TypeFilter tf : this.excludeFilters) {
 			if (tf.match(metadataReader, getMetadataReaderFactory())) {
 				return false;
 			}
 		}
+		//要加载的过滤器，判断哪些文件符合match方法，走isConditionMatch()方法，
 		for (TypeFilter tf : this.includeFilters) {
 			if (tf.match(metadataReader, getMetadataReaderFactory())) {
+
 				return isConditionMatch(metadataReader);
 			}
 		}
@@ -522,6 +538,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
 		AnnotationMetadata metadata = beanDefinition.getMetadata();
+		//isIndependent() 表示是独立的，是顶级类，或者是一个static的内部类
+		//isConcrete() 表示接口是一个接口或者抽象类
+		//是抽象类但是被Lookup注解标注，此类也会被注册
 		return (metadata.isIndependent() && (metadata.isConcrete() ||
 				(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
 	}

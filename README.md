@@ -1,3 +1,20 @@
+
+## 包扫描相关
+
+入口 ClassPathBeanDefinitionScanner doScan()方法
+
+- 1.扫描指定包下的class文件（加载符合条件的class文件），解析成BeanDefinition对象
+- 2.初始化BeanDefinition的相关属性，设置 Lazy Primary DependsOn Role Description等属性
+- 3.检验是否已经加载过该BeanDefinition对象，重复加载会报错
+- 4.将校验通过的BeanDefinition对象注入到beanDefinitionMap中
+
+
+
+
+
+
+
+
 # <img src="src/docs/spring-framework.png" width="80" height="80"> Spring Framework [![Build Status](https://ci.spring.io/api/v1/teams/spring-framework/pipelines/spring-framework-5.3.x/jobs/build/badge)](https://ci.spring.io/teams/spring-framework/pipelines/spring-framework-5.3.x?groups=Build") [![Revved up by Gradle Enterprise](https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A)](https://ge.spring.io/scans?search.rootProjectNames=spring)
 
 This is the home of the Spring Framework: the foundation for all [Spring projects](https://spring.io/projects). Collectively the Spring Framework and the family of Spring projects are often referred to simply as "Spring". 
