@@ -1,4 +1,6 @@
 
+# Spring源码解读
+
 ## 包扫描相关
 
 入口 ClassPathBeanDefinitionScanner doScan()方法
@@ -6,9 +8,17 @@
 - 1.扫描指定包下的class文件（加载符合条件的class文件），解析成BeanDefinition对象
 - 2.初始化BeanDefinition的相关属性，设置 Lazy Primary DependsOn Role Description等属性
 - 3.检验是否已经加载过该BeanDefinition对象，重复加载会报错
-- 4.将校验通过的BeanDefinition对象注入到beanDefinitionMap中
+- 4.将校验通过的BeanDefinition对象注入到`beanDefinitionMap`中
 
 
+## 初始化非懒加载的单例Bean
+
+入口 DefaultListableBeanFactory preInstantiateSingletons()
+
+- 1.循环beanName，获取合并后的bd对象（每个bean都对应bd对象，存在父子类关系的类会新生成一个bd对象---`RootBeanDefinition`>，放入合并后的bd集合Map中--->`mergedBeanDefinitions`）
+- 2.是单例bean、非懒加载、非抽象bd，则开始创建对象
+- 3.是factoryBean走特殊逻辑，非factoryBean直接创建bean，`getBean(beanName)`方法
+- 4.所有非懒加载的单例bean全部加载完成后，会执行所有实现了`SmartInitializingSingleton`接口的bean的`afterSingletonsInstantiated`方法
 
 
 
