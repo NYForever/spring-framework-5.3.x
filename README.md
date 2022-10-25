@@ -21,6 +21,18 @@
 - 4.所有非懒加载的单例bean全部加载完成后，会执行所有实现了`SmartInitializingSingleton`接口的bean的`afterSingletonsInstantiated`方法
 
 
+## getBean 创建bean实例
+
+入口 AbstractBeanFactory getBean()
+
+- 1.推断构造方法，getBean的三个重载方法
+- 2.通过name获取beanName
+- 3.如果是单例bean，直接从单例池中获取，返回
+- 4.else找出所有父类，获取`dependsOn`注解，先创建依赖的类
+- 5.根据scope创建bean
+  - 1.单例，直接从单例池中获取，没有则创建，放入单例池
+  - 2.元型bean，每次创建新的bean
+  - 3.其他类型的bean，根据scope，执行不同的逻辑，比如@Requestscope session request会将生成的bean放入其对应的作用域
 
 
 
