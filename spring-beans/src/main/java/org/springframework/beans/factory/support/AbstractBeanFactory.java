@@ -329,7 +329,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 			// Check if bean definition exists in this factory.
 			//containsBeanDefinition()判断当前beanDefinitionMap中有没有该beanName
-			//如果没有，切是有父工厂的话，从父工厂拿
+			//如果没有，且是有父工厂的话，从父工厂拿
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
@@ -1049,6 +1049,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 *
 	 * @see #addBeanPostProcessor
 	 * @see org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor
+	 *
+	 * 是否有instantiationAware类型的BeanPostProcessors
 	 */
 	protected boolean hasInstantiationAwareBeanPostProcessors() {
 		return !getBeanPostProcessorCache().instantiationAware.isEmpty();
@@ -1609,6 +1611,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private Class<?> doResolveBeanClass(RootBeanDefinition mbd, Class<?>... typesToMatch)
 			throws ClassNotFoundException {
 
+		//获取类加载器
 		ClassLoader beanClassLoader = getBeanClassLoader();
 		ClassLoader dynamicLoader = beanClassLoader;
 		boolean freshResolve = false;
@@ -1628,9 +1631,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 		}
-
+		//拿类名
 		String className = mbd.getBeanClassName();
 		if (className != null) {
+			//小细节 解析spring表达式
 			Object evaluated = evaluateBeanDefinitionString(className, mbd);
 			if (!className.equals(evaluated)) {
 				// A dynamically resolved expression, supported as of 4.2...
@@ -1648,6 +1652,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				// to avoid storing the resolved Class in the bean definition.
 				if (dynamicLoader != null) {
 					try {
+						//类加载器加载当前Class
 						return dynamicLoader.loadClass(className);
 					} catch (ClassNotFoundException ex) {
 						if (logger.isTraceEnabled()) {

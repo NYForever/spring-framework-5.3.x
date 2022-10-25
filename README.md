@@ -1,7 +1,16 @@
 
 # Spring源码解读
 
-## 包扫描相关
+## 1.注解相关
+`包扫描阶段`
+- 1.Conditional 加载完classe文件，includerFilter过滤之后，判断是否标注了该注解，如有，则跳过该类的bd加载
+- 2.Lookup filter校验通过后，会判断是不是抽象类或者接口，如是，则不加载其对应的bd，有一种特殊情况，如果是抽象的且是被Lookup注释的，则要加载其对应的bd
+- 3.Lazy Primary 设置bd属性阶段
+
+`初始化阶段`
+- 4.DependsOn 创建bean，获取完合并的bd对象RootBeanDefinition之后，查看是否有DependsOn，如有，则先创建依赖的bean
+
+## 2.包扫描相关
 
 入口 ClassPathBeanDefinitionScanner doScan()方法
 
@@ -11,7 +20,7 @@
 - 4.将校验通过的BeanDefinition对象注入到`beanDefinitionMap`中
 
 
-## 初始化非懒加载的单例Bean
+## 3.初始化非懒加载的单例Bean
 
 入口 DefaultListableBeanFactory preInstantiateSingletons()
 
@@ -21,7 +30,7 @@
 - 4.所有非懒加载的单例bean全部加载完成后，会执行所有实现了`SmartInitializingSingleton`接口的bean的`afterSingletonsInstantiated`方法
 
 
-## getBean 创建bean实例
+## 4.getBean 创建bean实例
 
 入口 AbstractBeanFactory getBean()
 
@@ -33,6 +42,21 @@
   - 1.单例，直接从单例池中获取，没有则创建，放入单例池
   - 2.元型bean，每次创建新的bean
   - 3.其他类型的bean，根据scope，执行不同的逻辑，比如@Requestscope session request会将生成的bean放入其对应的作用域
+
+## 5.createBean 实例化、初始化相关
+入口 AbstractAutowireCapableBeanFactory createBean()
+
+
+- 1.实例化前`InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation()`
+- 2.实例化
+- 3.`MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition()`
+- 4.`InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation()`
+- 5.属性赋值(spring自带的依赖注入)
+- 6.@AutoWired @Resource`InstantiationAwareBeanPostProcessor.postProcessProperties()`
+- 7.初始化前 PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
+- 8.初始化
+- 9.初始化后
+
 
 
 
