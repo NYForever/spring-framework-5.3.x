@@ -47,15 +47,15 @@
 入口 AbstractAutowireCapableBeanFactory createBean()
 
 
-- 1.实例化前`InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation()`
+- 1.实例化前`InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation()`，参数为Clss对象，可以修改class对象，如果有返回值，会执行BeanPostProcessor的postProcessAfterInitialization方法，然后直接返回改对象
 - 2.实例化
-- 3.`MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition()`
-- 4.`InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation()`
+- 3.`MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition()`，参数为beanDefinition，可以修改beanDefinition信息
+- 4.`InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation()`参数为bean对象；实例化对象之后，属性赋值之前；是给bean实例上执行自定义字段注入
 - 5.属性赋值(spring自带的依赖注入)
-- 6.@AutoWired @Resource`InstantiationAwareBeanPostProcessor.postProcessProperties()`
-- 7.初始化前 PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
-- 8.初始化
-- 9.初始化后
+- 6.`InstantiationAwareBeanPostProcessor.postProcessProperties()`，AutowiredAnnotationBeanPostProcessor实现类，注入注解@AutoWired @Value 标注的属性
+- 7.初始化前 @PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
+- 8.初始化 执行`InitializingBean.afterPropertiesSet()`方法;然后再执行`initMethodName()`
+- 9.初始化后 `BeanPostProcessor.postProcessAfterInitialization()`
 
 
 
