@@ -15,19 +15,23 @@
 入口 ClassPathBeanDefinitionScanner doScan()方法
 
 - 1.扫描指定包下的class文件（加载符合条件的class文件），解析成BeanDefinition对象
-- 2.初始化BeanDefinition的相关属性，设置 Lazy Primary DependsOn Role Description等属性
-- 3.检验是否已经加载过该BeanDefinition对象，重复加载会报错
-- 4.将校验通过的BeanDefinition对象注入到`beanDefinitionMap`中
+  - 1.根据TypeFilter过滤，`excludeFilters` `includeFilters`
+  - 2.查看是否被注解`@Conditional`注释，如果是也不注册该bd
+  - 3.查看是否是抽象类或者接口，若是，则不注册bd；特殊情况如果是抽象类，但是被`@Lookup`注解修饰则注册该bd
+- 2.初始化BeanDefinition的相关属性，设置 Lazy initMethodName destroyMethodName 等属性
+- 3.根据注解值设置属性 Primary DependsOn Role Description等属性
+- 4.检验是否已经加载过该BeanDefinition对象，重复加载会报错
+- 5.将校验通过的BeanDefinition对象注入到`beanDefinitionMap`中，方法返回`BeanDefinitionHolder`对象
 
 
 ## 3.初始化非懒加载的单例Bean
 
 入口 DefaultListableBeanFactory preInstantiateSingletons()
 
-- 1.循环beanName，获取合并后的bd对象（每个bean都对应bd对象，存在父子类关系的类会新生成一个bd对象---`RootBeanDefinition`>，放入合并后的bd集合Map中--->`mergedBeanDefinitions`）
-- 2.是单例bean、非懒加载、非抽象bd，则开始创建对象
+- 1.循环beanName，获取合并后的bd对象（每个bean都对应bd对象，在使用时会生成一个新的bd对象---`RootBeanDefinition`，并把合并后的bd集合Map中--->`mergedBeanDefinitions`）
+- 2.如果是单例bean、非懒加载、非抽象bd，则开始创建对象
 - 3.是factoryBean走特殊逻辑，非factoryBean直接创建bean，`getBean(beanName)`方法
-- 4.所有非懒加载的单例bean全部加载完成后，会执行所有实现了`SmartInitializingSingleton`接口的bean的`afterSingletonsInstantiated`方法
+- 4.所有非懒加载的单例bean全部加载完成后，会执行所有实现了`SmartInitializingSingleton`接口的bean的`afterSingletonsInstantiated()`方法
 
 
 ## 4.getBean 创建bean实例
@@ -37,11 +41,11 @@
 - 1.推断构造方法，getBean的三个重载方法
 - 2.通过name获取beanName
 - 3.如果是单例bean，直接从单例池中获取，返回
-- 4.else找出所有父类，获取`dependsOn`注解，先创建依赖的类
+- 4.else找出所有父类，获取`@DependsOn`注解，先创建依赖的类
 - 5.根据scope创建bean
   - 1.单例，直接从单例池中获取，没有则创建，放入单例池
   - 2.元型bean，每次创建新的bean
-  - 3.其他类型的bean，根据scope，执行不同的逻辑，比如@Requestscope session request会将生成的bean放入其对应的作用域
+  - 3.其他类型的bean，根据scope，执行不同的逻辑，比如`@Requestscope` session request会将生成的bean放入其对应的作用域
 
 ## 5.createBean 实例化、初始化相关
 入口 AbstractAutowireCapableBeanFactory createBean()
