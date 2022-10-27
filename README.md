@@ -60,6 +60,9 @@
 - 7.初始化前 @PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
 - 8.初始化 执行`InitializingBean.afterPropertiesSet()`方法;然后再执行`initMethodName()`
 - 9.初始化后 `BeanPostProcessor.postProcessAfterInitialization()`
+- 10.bean的销毁 实现接口`DisposableBean` 或者方法添加注解 `@PreDestory`
+  - 什么时候执行，容器销毁的时候执行  `context.close()`或者`context.reggisterShutdownHook()`
+  - 入口 `AbstractApplicationContext doClose()`
 
 
 
