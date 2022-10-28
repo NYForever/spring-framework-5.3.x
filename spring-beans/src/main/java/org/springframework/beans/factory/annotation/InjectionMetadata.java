@@ -263,6 +263,7 @@ public class InjectionMetadata {
 					return skip;
 				}
 				if (this.pd != null) {
+					//程序员自己定义了 就跳过
 					if (pvs.contains(this.pd.getName())) {
 						// Explicit value provided as part of the bean definition.
 						this.skip = true;

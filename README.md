@@ -57,10 +57,13 @@
 - 4.`InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation()`参数为bean对象；实例化对象之后，属性赋值之前；是给bean实例上执行自定义字段注入
 - 5.属性赋值(spring自带的依赖注入)
 - 6.`InstantiationAwareBeanPostProcessor.postProcessProperties()`，AutowiredAnnotationBeanPostProcessor实现类，注入注解@AutoWired @Value 标注的属性
-- 7.初始化前 @PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
-- 8.初始化 执行`InitializingBean.afterPropertiesSet()`方法;然后再执行`initMethodName()`
-- 9.初始化后 `BeanPostProcessor.postProcessAfterInitialization()`
-- 10.bean的销毁 实现接口`DisposableBean` 或者方法添加注解 `@PreDestory`
+  - 1.`AutowiredAnnotationBeanPostProcessor postProcessMergedBeanDefinition()`会生成注入点 `InjectionMetadata`对象
+  - 2.`AutowiredAnnotationBeanPostProcessor postProcessProperties()`会执行`inject()`方法，调用反射给自动注入的属性或者方法进行赋值（`AutowiredFieldElement AutowiredMethodElement`）
+- 7.执行aware回调 `BeanNameAware BeanClassLoaderAware BeanFactoryAware`
+- 8.初始化前 @PostConstruct也是通过BeanPostProcessor的postProcessBeforeInitialization()方法实现的
+- 9.初始化 执行`InitializingBean.afterPropertiesSet()`方法;然后再执行`initMethodName()`
+- 10.初始化后 `BeanPostProcessor.postProcessAfterInitialization()`
+- 11.bean的销毁 实现接口`DisposableBean` 或者方法添加注解 `@PreDestory`
   - 什么时候执行，容器销毁的时候执行  `context.close()`或者`context.reggisterShutdownHook()`
   - 入口 `AbstractApplicationContext doClose()`
 
