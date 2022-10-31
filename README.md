@@ -69,6 +69,46 @@
 
 
 
+## 6. @AutoWired注解详解
+入口：`AutowiredAnnotationBeanPostProcessor AutowiredMethodElement AutowiredFieldElement`
+核心方法：`resolveMethodArguments()中的 beanFactory.resolveDependency() 中的doResolveDependency()`
+
+- 1.填充@Value属性，占位符或者spel表达式填充
+- 2.如果自动注入的属性需要是多个，即是集合、接口、map，即需要返回多个实现的，直接返回找到的结果，其他情况继续往下执行
+- 3.根据type找所有的实现类，如果为空且标注了request=true，则会报错，找不到对应的bean `DefaultListableBeanFactory doResolveDependency() findAutowireCandidates()`
+  - 1.`BeanFactoryUtils.beanNamesForTypeIncludingAncestors() getBeanNamesForType() doGetBeanNamesForType()`，根据类型找bean数组，原理：
+    - a.遍历bdNames集合
+    - b.从单例池中找出和bdName一样的对象
+    - c.判断找出的对象类型是否和传进来的类型一致
+    - d.将一致的对象的名字放入数组中返回
+  - 2.`isAutowireCandidate()` `@Bean autowireCandidate`注解的一个属性，默认为true，表示当前这个bean是否可以用来进行依赖注入
+  - 3.会走到父类`QualifierAnnotationAutowireCandidateResolver`，再调用父类`GenericTypeAwareAutowireCandidateResolver`处理泛型，如果是泛型，需要合传入的类型是匹配的
+  - 4.`@Qualifier` `QualifierAnnotationAutowireCandidateResolver的isAutowireCandidate()的checkQualifiers()`
+- 4.实现类有很多个，需要过滤出符合条件的bean `DefaultListableBeanFactory doResolveDependency() determineAutowireCandidate()`
+  - 1.加载标注了`@Primary`注解的类，数值越小优先级越高，优先级相同会找到两个，最后报错
+  - 2.类上标注了`@Priority`注解，则直接返回该bean
+  - 3.以上都没有，则会通过参数名进行匹配，找出对应的bean
+
+
+###tips:
+- 1.`@Lazy`可以修饰成员变量、属性、类；会生成一个代理对象 `ContextAnnotationAutowireCandidateResolver`，真正用到该对象时才会去对象工厂中找对应的代理对象，也就是延迟加载
+- 2.Environment对象
+  - 1.包含操作系统的信息
+  - 2.包含properties配置文件的内容
+  - 3.包含通过启动参数指定的配置
+- 3.`@Value("${123}")`如果获取不到配置，会直接赋值为${123}
+- 4.`@Value("#{}")`spring el表达式
+- 5.`@Primary` `@Priority`
+
+
+
+
+
+
+
+
+
+
 
 
 # <img src="src/docs/spring-framework.png" width="80" height="80"> Spring Framework [![Build Status](https://ci.spring.io/api/v1/teams/spring-framework/pipelines/spring-framework-5.3.x/jobs/build/badge)](https://ci.spring.io/teams/spring-framework/pipelines/spring-framework-5.3.x?groups=Build") [![Revved up by Gradle Enterprise](https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A)](https://ge.spring.io/scans?search.rootProjectNames=spring)
