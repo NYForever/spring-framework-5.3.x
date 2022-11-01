@@ -605,6 +605,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 	 */
 	@Nullable
 	private Object resolvedCachedArgument(@Nullable String beanName, @Nullable Object cachedArgument) {
+
 		if (cachedArgument instanceof DependencyDescriptor) {
 			DependencyDescriptor descriptor = (DependencyDescriptor) cachedArgument;
 			Assert.state(this.beanFactory != null, "No BeanFactory available");
@@ -763,7 +764,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			//result
 			Object[] arguments = new Object[argumentCount];
 
-			//，根据参数数量，生成对应个数的依赖描述器
+			//根据参数数量，生成对应个数的依赖描述器
 			DependencyDescriptor[] descriptors = new DependencyDescriptor[argumentCount];
 			Set<String> autowiredBeans = new LinkedHashSet<>(argumentCount);
 			Assert.state(beanFactory != null, "No BeanFactory available");

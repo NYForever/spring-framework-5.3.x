@@ -324,8 +324,10 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		//寻找注入点
 		InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
 		try {
+			//是InjectionMetadata的inject方法
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (Throwable ex) {
@@ -372,6 +374,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		Class<?> targetClass = clazz;
 
 		do {
+			//InjectedElement对象
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
 
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
@@ -387,11 +390,14 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					}
 					currElements.add(new EjbRefElement(field, field, null));
 				}
+				//有@Resource表示是注入点
 				else if (field.isAnnotationPresent(Resource.class)) {
+					//static 会抛异常
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@Resource annotation is not supported on static fields");
 					}
 					if (!this.ignoredResourceTypes.contains(field.getType().getName())) {
+						//注入点 ResourceElement对象
 						currElements.add(new ResourceElement(field, field, null));
 					}
 				}
@@ -469,6 +475,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			}
 			@Override
 			public Object getTarget() {
+				//
 				return getResource(element, requestingBeanName);
 			}
 			@Override
@@ -517,6 +524,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			throw new NoSuchBeanDefinitionException(element.lookupType,
 					"No resource factory configured - specify the 'resourceFactory' property");
 		}
+		//走这里
 		return autowireResource(this.resourceFactory, element, requestingBeanName);
 	}
 
@@ -539,6 +547,8 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		if (factory instanceof AutowireCapableBeanFactory) {
 			AutowireCapableBeanFactory beanFactory = (AutowireCapableBeanFactory) factory;
 			DependencyDescriptor descriptor = element.getDependencyDescriptor();
+
+			//如果没有指定名字，且bean工厂中没有该name的bean，会根据类型去找
 			if (this.fallbackToDefaultTypeMatch && element.isDefaultName && !factory.containsBean(name)) {
 				autowiredBeanNames = new LinkedHashSet<>();
 				resource = beanFactory.resolveDependency(descriptor, requestingBeanName, autowiredBeanNames, null);
@@ -547,6 +557,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 				}
 			}
 			else {
+				//如果bean工厂中有name，直接通过name查找
 				resource = beanFactory.resolveBeanByName(name, descriptor);
 				autowiredBeanNames = Collections.singleton(name);
 			}
@@ -640,11 +651,13 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		public ResourceElement(Member member, AnnotatedElement ae, @Nullable PropertyDescriptor pd) {
 			super(member, pd);
 			Resource resource = ae.getAnnotation(Resource.class);
+			//获取配置的name和type
 			String resourceName = resource.name();
 			Class<?> resourceType = resource.type();
 			this.isDefaultName = !StringUtils.hasLength(resourceName);
 			if (this.isDefaultName) {
 				resourceName = this.member.getName();
+				//如果没有指定name,并且如果是方法。获取set方法后面的值为名字，也就是beanName
 				if (this.member instanceof Method && resourceName.startsWith("set") && resourceName.length() > 3) {
 					resourceName = Introspector.decapitalize(resourceName.substring(3));
 				}
@@ -669,6 +682,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 		@Override
 		protected Object getResourceToInject(Object target, @Nullable String requestingBeanName) {
+			//如果懒加载 会生成代理对象 buildLazyResourceProxy
 			return (this.lazyLookup ? buildLazyResourceProxy(this, requestingBeanName) :
 					getResource(this, requestingBeanName));
 		}

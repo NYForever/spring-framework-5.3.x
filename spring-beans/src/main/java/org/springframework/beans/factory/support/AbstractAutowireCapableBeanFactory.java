@@ -616,6 +616,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			//先往三级缓存里存，如果出现循环依赖，会触发lamber表达式；表达式会根据是否需要AOP，创建不同的对象，需要则会返回代理对象，不需要则会放回原始对象，并将代理/原始对象放入二级缓存
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -625,7 +626,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			//属性赋值
 			populateBean(beanName, mbd, instanceWrapper);
 
-			//初始化
+			//初始化 正常这里如果需要AOP，返回的是代理对象，如果出现了循环依赖并且需要AOP，这里返回的是一个原始对象，在下面643行会处理，从二级缓存中拿代理对象
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -638,6 +639,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
+		//如果允许循环依赖执行这里
 		if (earlySingletonExposure) {
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
@@ -1840,7 +1842,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
-			//初始化后
+			//初始化后 会执行AOP
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 

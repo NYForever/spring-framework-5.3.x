@@ -89,6 +89,11 @@
   - 2.类上标注了`@Priority`注解，则直接返回该bean
   - 3.以上都没有，则会通过参数名进行匹配，找出对应的bean
 
+### 1.@Resouse
+入口：`CommonAnnotationBeanPostProcessor postProcessMergedBeanDefinition postProcessProperties`
+
+- 1.@Resouse不是spring的，他只是支持了，他是先通过name去找，找不到会通过type去找，这一点是和Autowired的区别,好处是如果之后不用spring了，这个也不会报错
+
 
 ###tips:
 - 1.`@Lazy`可以修饰成员变量、属性、类；会生成一个代理对象 `ContextAnnotationAutowireCandidateResolver`，真正用到该对象时才会去对象工厂中找对应的代理对象，也就是延迟加载
@@ -102,7 +107,25 @@
 
 
 
+## 7.循环依赖
 
+- 1.三级缓存
+  - 1.创建BService
+    - 创建对象-->填充属性AService-->去单例池中找(找到直接赋值，一级缓存)-->没找到-->去creatingSet中找-->如果存在说明出现了循环依赖-->
+    - 去earlySingletonObjects(二级缓存)找-->没找到，会从singletonFactories(三级缓存)中找-->
+    - 三级缓存里存的是lambda的一段逻辑，逻辑中会判断是否需要AOP，如果不需要会把原始对象放入二级缓存，如果需要AOP，会提前进行AOP，并把代理对象放入二级缓存-->执行--->放入earlySingletonObjects
+  - 2.创建CService
+    - 创建对象，填充AService--->去单例池中找，没有-->去creatingSet中找-->有，说明出现了循环依赖-->
+    - 去earlySingletonObjects(二级缓存)找-->找到了，是在创建BService时放入的，这样就算是代理对象，这里也不会生成新的代理对象，保证了单例-->赋值给当前属性
+
+- 2.如果bean不是单例的，发生循环依赖了，是不能解决的
+
+  - `singletonObjects` 存放完整的bean对象
+  - `earlySingletonObjects` 二级缓存 缓存的是没有经过完整生命周期的bean，如果当前bean出现了循环依赖，就会将当前没有经过完整生命周期的bean放入该map中
+    - 如果需要进行AOP，则会在AOP之后，将代理对象放入该map中
+    - 如果不需要进行AOP，则会将当前原始对象放入该map中
+  - `singletonFactories` 三级缓存 RwnMap<BeanName,AService的原始对象(属性是没有值的)>
+  - `creatingSet` 存放正在创建中的对象
 
 
 

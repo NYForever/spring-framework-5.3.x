@@ -235,6 +235,7 @@ public class InjectionMetadata {
 					//反射设置属性的值
 					Method method = (Method) this.member;
 					ReflectionUtils.makeAccessible(method);
+					//核心方法 getResourceToInject
 					method.invoke(target, getResourceToInject(target, requestingBeanName));
 				}
 				catch (InvocationTargetException ex) {
