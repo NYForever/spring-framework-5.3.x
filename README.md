@@ -10,6 +10,8 @@
 `初始化阶段`
 - 4.DependsOn 创建bean，获取完合并的bd对象RootBeanDefinition之后，查看是否有DependsOn，如有，则先创建依赖的bean
 
+- 1.项目启动类 `AnnotationConfigApplicationContext`
+
 ## 2.包扫描相关
 
 入口 ClassPathBeanDefinitionScanner doScan()方法
@@ -71,6 +73,7 @@
 
 ## 6. @AutoWired注解详解
 入口：`AutowiredAnnotationBeanPostProcessor AutowiredMethodElement AutowiredFieldElement`
+`CommonAnnotationBeanPostProcessor`
 核心方法：`resolveMethodArguments()中的 beanFactory.resolveDependency() 中的doResolveDependency()`
 
 - 1.填充@Value属性，占位符或者spel表达式填充
@@ -114,18 +117,52 @@
     - 创建对象-->填充属性AService-->去单例池中找(找到直接赋值，一级缓存)-->没找到-->去creatingSet中找-->如果存在说明出现了循环依赖-->
     - 去earlySingletonObjects(二级缓存)找-->没找到，会从singletonFactories(三级缓存)中找-->
     - 三级缓存里存的是lambda的一段逻辑，逻辑中会判断是否需要AOP，如果不需要会把原始对象放入二级缓存，如果需要AOP，会提前进行AOP，并把代理对象放入二级缓存-->执行--->放入earlySingletonObjects
+      - 三级缓存里的lambda表达式返回的对象，要么是原始对象，要么是代理对象，这些对象都是发生在实例化之后的半成品对象，如果循环依赖发生在实例化之前，则三级缓存没用，会报错，可以使用`@Lazy`解决
   - 2.创建CService
     - 创建对象，填充AService--->去单例池中找，没有-->去creatingSet中找-->有，说明出现了循环依赖-->
     - 去earlySingletonObjects(二级缓存)找-->找到了，是在创建BService时放入的，这样就算是代理对象，这里也不会生成新的代理对象，保证了单例-->赋值给当前属性
 
 - 2.如果bean不是单例的，发生循环依赖了，是不能解决的
+  - 如果实例化之前发生了循环依赖，则只能通过`@Lazy`解决
 
-  - `singletonObjects` 存放完整的bean对象
-  - `earlySingletonObjects` 二级缓存 缓存的是没有经过完整生命周期的bean，如果当前bean出现了循环依赖，就会将当前没有经过完整生命周期的bean放入该map中
-    - 如果需要进行AOP，则会在AOP之后，将代理对象放入该map中
-    - 如果不需要进行AOP，则会将当前原始对象放入该map中
-  - `singletonFactories` 三级缓存 RwnMap<BeanName,AService的原始对象(属性是没有值的)>
-  - `creatingSet` 存放正在创建中的对象
+    - `singletonObjects` 存放完整的bean对象
+    - `earlySingletonObjects` 二级缓存 缓存的是没有经过完整生命周期的bean，如果当前bean出现了循环依赖，就会将当前没有经过完整生命周期的bean放入该map中
+      - 如果需要进行AOP，则会在AOP之后，将代理对象放入该map中
+      - 如果不需要进行AOP，则会将当前原始对象放入该map中
+    - `singletonFactories` 三级缓存 存放的是一段lambda表达式
+    - `creatingSet` 存放正在创建中的对象
+
+
+## 8.推断构造方法
+
+
+## 9.spring启动类解析 refresh
+
+入口：AbstractApplicationContext refresh
+
+- 1.配置类解析 入口`ConfigurationClassPostProcessor postProcessBeanDefinitionRegistry()`
+- 2.`invokeBeanFactoryPostProcessors(beanFactory);`
+  - 1.执行BeanFactoryPostProcessor接口及子接口的方法，包扫描也发生在这里
+  - 2.会先执行其子类`BeanDefinitionRegistryPostProcessor`的`postProcessBeanDefinitionRegistry()`方法
+    - 都是子类类型，会根据注解排序先标注了`@PriorityOrdered`注解的，再`@Ordered`的，最后是没加标签的
+  - 3.再执行其父类的`postProcessBeanFactory()`
+- 3.`ConfigurationClassPostProcessor`是`BeanDefinitionRegistryPostProcessor`类型，其`postProcessBeanDefinitionRegistry()`执行逻辑
+  - 1.校验是否是配置类，`@Configuration`标注的是full配置类 `@Bean @Component @Import @ComponentScan @ImportResource`标注的是lite配置类，是配置类会生成该对象的bd信息
+  - 2.生成`ConfigurationClassParser`解析器，解析配置类`@Component @PropertySources @ComponentScans会触发包扫描 @Import @ImportResource @Bean`
+  - 3.`this.reader.loadBeanDefinitions(configClasses);`会生成bd对象
+- 4.`registerBeanPostProcessors(beanFactory);`
+  - 1.实例化所有BeanPostProcessors，并将其放入list`AbstractBeanFactory beanPostProcessors`中
+  - 2.放入list的顺序是：先标注了`@PriorityOrdered`注解的，再`@Ordered`的，最后是没加标签的
+  - 3.所有实现了`MergedBeanDefinitionPostProcessor`接口的类统一最后注册
+
+
+![img.png](img.png)
+
+
+### tips：
+- 1.@Bean @Import
+- 2.顺序 `@PriorityOrdered` `@Ordered`
+
 
 
 

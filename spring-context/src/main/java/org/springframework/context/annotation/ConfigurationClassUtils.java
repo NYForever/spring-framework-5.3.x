@@ -122,10 +122,12 @@ abstract class ConfigurationClassUtils {
 			}
 		}
 
+		//有没有加 Configuration 注解  full配置类
 		Map<String, Object> config = metadata.getAnnotationAttributes(Configuration.class.getName());
 		if (config != null && !Boolean.FALSE.equals(config.get("proxyBeanMethods"))) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		//lite配置类  如果加了Configuration注解，或者说isConfigurationCandidate返回true，表示是一个lite配置类
 		else if (config != null || isConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
@@ -156,6 +158,7 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// Any of the typical annotations found?
+		//如果有4个注解中的一个 就也是一个配置类  是lite配置类
 		for (String indicator : candidateIndicators) {
 			if (metadata.isAnnotated(indicator)) {
 				return true;
@@ -163,6 +166,7 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// Finally, let's look for @Bean methods...
+		//或者说类里面有加了@Bean的方法，就也是配置类
 		return hasBeanMethods(metadata);
 	}
 
