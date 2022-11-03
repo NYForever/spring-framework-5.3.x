@@ -163,10 +163,22 @@
 - 1.@Bean @Import
 - 2.顺序 `@PriorityOrdered` `@Ordered`
 
+## 10.spring整合Mybatis
+
+- 1.spring整个其他框架的核心，就是让其他框架生成的对象交给spring管理，成为容器中的一个bean
+  - 1.FactoryBean
+  - 2.BeanDefinitionRegistryPostProcessor
+  - 3.扫描`ClassPathBeanDefinitionScanner`
+- 2.mybatis
+  - 1.SqlSessionTemplate如何实现线程安全 ThreadLocal 
+    - 每个线程执行sql之前都去ThreadLocal中看下有没有sqlSession
+    - sprin整合mybatis之后一级缓存会失效，一级缓存就是同一个sqlSession中的查询可以被缓存，但是每个线程都会有新的sqlSession；如果想让一级缓存生效，则就开启spring事务
 
 
-
-
+### tips
+- 1.如何注册bd
+  - 1.实现接口`BeanDefinitionRegistryPostProcessor`
+  - 2.实现接口`ImportBeanDefinitionRegistrar`
 
 
 
