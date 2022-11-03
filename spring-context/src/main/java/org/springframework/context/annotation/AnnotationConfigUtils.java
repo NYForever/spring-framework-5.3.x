@@ -160,6 +160,7 @@ public abstract class AnnotationConfigUtils {
 
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
+		//这里放入的BeanPostProcessor是bd对象，并没有实例化
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
 			//这里放入ConfigurationClassPostProcessor 的bd对象
 			RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
