@@ -178,6 +178,7 @@
 ### tips
 - 1.如何注册bd
   - 1.实现接口`BeanDefinitionRegistryPostProcessor`
+    - 子类`ConfigurationClassPostProcessor`，该类会进行检测配置类、解析配置类、包扫描等，注册bean的bd信息
   - 2.实现接口`ImportBeanDefinitionRegistrar`
 
 
