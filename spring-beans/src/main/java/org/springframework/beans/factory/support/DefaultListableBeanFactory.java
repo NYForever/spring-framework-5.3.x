@@ -957,7 +957,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
 
 			//isAbstract() 抽象的BeanDefinition
-			//是单例的  是懒加载的
+			//是单例的  是非懒加载的
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
 
 				if (isFactoryBean(beanName)) {

@@ -539,7 +539,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
 		AnnotationMetadata metadata = beanDefinition.getMetadata();
 		//isIndependent() 表示是独立的，是顶级类，或者是一个static的内部类
-		//isConcrete() 表示接口是一个接口或者抽象类
+		//isConcrete() 表示不是一个接口、不是一个抽象类
 		//是抽象类但是被Lookup注解标注，此类也会被注册
 		return (metadata.isIndependent() && (metadata.isConcrete() ||
 				(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
