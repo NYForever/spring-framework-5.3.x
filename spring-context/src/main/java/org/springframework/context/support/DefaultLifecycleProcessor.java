@@ -152,6 +152,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			}
 		});
 		if (!phases.isEmpty()) {
+			//循环调用Lifecycle的每个实现类的start方法
 			phases.values().forEach(LifecycleGroup::start);
 		}
 	}
@@ -175,6 +176,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 					logger.trace("Starting bean '" + beanName + "' of type [" + bean.getClass().getName() + "]");
 				}
 				try {
+					//调用start方法
 					bean.start();
 				}
 				catch (Throwable ex) {
@@ -353,6 +355,7 @@ public class DefaultLifecycleProcessor implements LifecycleProcessor, BeanFactor
 			}
 			Collections.sort(this.members);
 			for (LifecycleGroupMember member : this.members) {
+				//调用start方法
 				doStart(this.lifecycleBeans, member.name, this.autoStartupOnly);
 			}
 		}
