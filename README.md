@@ -1,6 +1,8 @@
 
 # Spring源码解读
 
+![img_1.png](img_1.png)
+
 ## 1.注解相关
 `包扫描阶段`
 - 1.Conditional 加载完classe文件，includerFilter过滤之后，判断是否标注了该注解，如有，则跳过该类的bd加载
@@ -116,7 +118,7 @@
   - 1.创建BService
     - 创建对象-->填充属性AService-->去单例池中找(找到直接赋值，一级缓存)-->没找到-->去creatingSet中找-->如果存在说明出现了循环依赖-->
     - 去earlySingletonObjects(二级缓存)找-->没找到，会从singletonFactories(三级缓存)中找-->
-    - 三级缓存里存的是lambda的一段逻辑，逻辑中会判断是否需要AOP，如果不需要会把原始对象放入二级缓存，如果需要AOP，会提前进行AOP，并把代理对象放入二级缓存-->执行--->放入earlySingletonObjects
+    - 三级缓存里存的是lambda的一段逻辑，逻辑中会判断是否需要AOP，如果不需要会把原始对象放入二级缓存，如果需要AOP，会提前进行AOP（正常情况下AOP发生在"BEAN初始化后"），并把代理对象放入二级缓存-->执行--->放入earlySingletonObjects
       - 三级缓存里的lambda表达式返回的对象，要么是原始对象，要么是代理对象，这些对象都是发生在实例化之后的半成品对象，如果循环依赖发生在实例化之前，则三级缓存没用，会报错，可以使用`@Lazy`解决
   - 2.创建CService
     - 创建对象，填充AService--->去单例池中找，没有-->去creatingSet中找-->有，说明出现了循环依赖-->
